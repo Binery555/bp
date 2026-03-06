@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Futures PNL – History</title>
+
+  <style>
+    :root{
+      --app-max: 460px;
+      --pad-x: 16px;
+
+      --bg: #1F2630;
+      --surface: #2C343F;
+      --divider: rgba(240, 242, 246, 0.08);
+      --border-strong: #607086;
+
+      --text: #F0F2F6;
+      --text-2: #D5DAE1;
+
+      --accent: #F6D348;
+
+      --pos: #2FCB8D;
+      --neg: #F45F7A;
+      --neutral: #6E7887;
+
+      --pos-fill-top: rgba(47, 203, 141, 0.14);
+      --pos-fill-bot: rgba(47, 203, 141, 0.08);
+      --neg-fill-top: rgba(244, 95, 122, 0.14);
+      --neg-fill-bot: rgba(244, 95, 122, 0.08);
+      --zero-fill-top: rgba(118,130,149,.16);
+      --zero-fill-bot: rgba(118,130,149,.10);
+
+      --fs-11: 0.6875rem;
+      --fs-12: 0.75rem;
+      --fs-13: 0.8125rem;
+      --fs-14: 0.875rem;
+      --fs-16: 1rem;
+      --fs-32: 2rem;
+      --lh-tight: 1.15;
+      --lh: 1.35;
+
+      --num-font: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      line-height:var(--lh);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    a{ color:inherit; text-decoration:none; }
+    button{ font:inherit; color:inherit; }
+
+    .app{
+      width:min(100%, var(--app-max));
+      min-height:100vh;
+      margin:0 auto;
+      padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .app-header{ padding:10px 0 6px; }
+
+    .statusbar{
+      display:none;
+    }
+
+    .appbar{
+      display:grid;
+      grid-template-columns:44px 1fr 44px;
+      align-items:center;
+      padding:10px var(--pad-x) 6px;
+      gap:6px;
+    }
+
+    .appbar__title{
+      margin:0;
+      text-align:center;
+      font-size:var(--fs-16);
+      font-weight:650;
+      letter-spacing:.01em;
+    }
+
+    .title-btn{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      background:transparent;
+      border:0;
+      padding:6px 8px;
+      border-radius:12px;
+    }
+
+    .segment-tabs{
+      display:flex;
+      gap:20px;
+      padding:6px var(--pad-x) 0;
+      border-bottom:1px solid rgba(240,242,246,.05);
+    }
+
+    .segment-tab{
+      position:relative;
+      padding:10px 0 12px;
+      font-size:var(--fs-14);
+      color:var(--text-2);
+      letter-spacing:.01em;
+    }
+
+    .segment-tab.is-active{ color:var(--text); }
+
+    .segment-tab.is-active::after{
+      content:"";
+      position:absolute;
+      left:0;
+      bottom:0;
+      width:20px;
+      height:3px;
+      background:var(--accent);
+      border-radius:3px;
+    }
+
+    .icon{ width:22px; height:22px; }
+    .icon--sm{ width:18px; height:18px; }
+
+    .icon-btn{
+      width:40px;
+      height:40px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background:transparent;
+      border:0;
+      border-radius:12px;
+      cursor:pointer;
+      touch-action:manipulation;
+      padding:0;
+    }
+
+    .icon-btn--ghost{
+      width:28px;
+      height:28px;
+      opacity:.96;
+    }
+
+    .icon-btn--square{
+      width:36px;
+      height:36px;
+      background:var(--surface);
+      border:1px solid var(--border-strong);
+      border-radius:10px;
+    }
+
+    .icon-btn:disabled{
+      opacity:.35;
+      cursor:not-allowed;
+    }
+
+    .pnl-summary{ padding:14px var(--pad-x) 8px; }
+
+    .pnl-summary__header{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .section-label{
+      margin:0;
+      font-size:var(--fs-14);
+      color:var(--text-2);
+      font-weight:550;
+    }
+
+    .pnl-big{
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+      margin-top:8px;
+    }
+
+    .pnl-big__pct{
+      font-size:var(--fs-32);
+      font-weight:750;
+      line-height:var(--lh-tight);
+      letter-spacing:-.02em;
+      font-family:var(--num-font);
+    }
+
+    .pnl-big__amt{
+      font-size:var(--fs-14);
+      font-weight:650;
+      opacity:.95;
+      font-family:var(--num-font);
+    }
+
+    .unit{
+      font-size:.9em;
+      opacity:.85;
+      font-family:var(--num-font);
+    }
+
+    .metric-grid{
+      margin:12px 0 0;
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:14px;
+    }
+
+    .metric__label{
+      font-size:var(--fs-12);
+      color:rgba(213,218,225,.72);
+      margin:0 0 6px;
+    }
+
+    .metric__main{
+      font-size:var(--fs-14);
+      font-weight:750;
+      margin:0;
+      font-family:var(--num-font);
+    }
+
+    .metric__sub{
+      font-size:var(--fs-12);
+      margin:2px 0 0;
+      opacity:.95;
+      font-family:var(--num-font);
+    }
+
+    .pnl--pos{ color:var(--pos); }
+    .pnl--neg{ color:var(--neg); }
+    .pnl--neutral{ color:var(--neutral); }
+
+    .totals-panel{ padding:8px var(--pad-x) 0; }
+
+    .range-picker{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding:6px 0 10px;
+    }
+
+    .range-pill{
+      background:transparent;
+      border:0;
+      color:rgba(213,218,225,.75);
+      font-size:var(--fs-13);
+      padding:6px 6px;
+      border-radius:999px;
+    }
+
+    .range-pill.is-active{
+      background:rgba(240,242,246,.08);
+      border:1px solid rgba(240,242,246,.16);
+      padding:6px 10px;
+      color:var(--text);
+    }
+
+    .totals{
+      margin:0;
+      padding:0 0 6px;
+    }
+
+    .totals__row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:12px;
+      padding:8px 0;
+      border-bottom:none;
+    }
+
+    .totals__row dt{
+      color:rgba(213,218,225,.7);
+      font-size:var(--fs-13);
+    }
+
+    .totals__row dd{
+      margin:0;
+      font-size:var(--fs-13);
+      font-weight:650;
+      font-variant-numeric: tabular-nums;
+      font-family:var(--num-font);
+    }
+
+    #netProfit,
+    #netProfit .unit{
+      color:#FFFFFF !important;
+      opacity:1 !important;
+    }
+
+    .subtabs{
+      display:flex;
+      gap:18px;
+      padding:12px var(--pad-x) 0;
+      overflow-x:auto;
+      scrollbar-width:none;
+    }
+
+    .subtabs::-webkit-scrollbar{ display:none; }
+
+    .subtab{
+      position:relative;
+      padding:10px 0 12px;
+      font-size:var(--fs-14);
+      color:rgba(213,218,225,.75);
+      white-space:nowrap;
+    }
+
+    .subtab.is-active{ color:var(--text); }
+
+    .subtab.is-active::after{
+      content:"";
+      position:absolute;
+      left:0;
+      bottom:0;
+      width:18px;
+      height:3px;
+      background:var(--accent);
+      border-radius:3px;
+    }
+
+    .daily{ padding:12px var(--pad-x) 0; }
+
+    .daily__header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:4px 0 10px;
+    }
+
+    .daily__title{
+      margin:0;
+      font-size:var(--fs-16);
+      font-weight:750;
+    }
+
+    .daily__actions{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      min-width:86px;
+    }
+
+    .daily__action-image{
+      display:block;
+      width:84px;
+      height:auto;
+      border-radius:14px;
+      object-fit:cover;
+      box-shadow:0 2px 8px rgba(0,0,0,.18);
+    }
+
+    .month-nav{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      margin-top:2px;
+    }
+
+    .month-nav__label{
+      margin:0;
+      font-size:var(--fs-13);
+      color:rgba(213,218,225,.82);
+      letter-spacing:.02em;
+      min-width:72px;
+      text-align:center;
+      line-height:1;
+      font-family:var(--num-font);
+    }
+
+    .month-nav__btn{
+      width:14px;
+      height:14px;
+      min-width:14px;
+      min-height:14px;
+      border:0;
+      background:transparent;
+      padding:0;
+      border-radius:0;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    }
+
+    .month-nav__btn:disabled{
+      opacity:.35;
+      cursor:not-allowed;
+    }
+
+    .triangle{
+      display:block;
+      width:0;
+      height:0;
+      filter:drop-shadow(0 0 1px rgba(255,255,255,.12));
+    }
+
+    .triangle--left{
+      border-top:5px solid transparent;
+      border-bottom:5px solid transparent;
+      border-right:7px solid #F0F2F6;
+    }
+
+    .triangle--right{
+      border-top:5px solid transparent;
+      border-bottom:5px solid transparent;
+      border-left:7px solid #F0F2F6;
+    }
+
+    .calendar{ padding:12px 0 0; }
+
+    .dow{
+      display:grid;
+      grid-template-columns:repeat(7, minmax(0,1fr));
+      gap:10px;
+      padding:6px 2px 0;
+      color:rgba(213,218,225,.58);
+      font-size:var(--fs-12);
+      letter-spacing:.08em;
+    }
+
+    .dow span{ text-align:center; }
+
+    .calendar-grid{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns:repeat(7, minmax(0,1fr));
+      gap:10px;
+    }
+
+    .day{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:6px;
+      padding:10px;
+      min-height:52px;
+      aspect-ratio:1/1;
+      border-radius:6px;
+      background:transparent;
+      border:0;
+      text-align:left;
+      cursor:pointer;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .day:hover{ background:rgba(240,242,246,.04); }
+
+    .day__num{
+      font-size:11px;
+      font-weight:500;
+      color:rgba(240,242,246,.92);
+      line-height:1;
+      font-family:var(--num-font);
+    }
+
+    .day__val{
+      font-size:10px;
+      font-weight:500;
+      line-height:1;
+      letter-spacing:0;
+      opacity:1;
+      font-family:var(--num-font);
+    }
+
+    .day--pos{
+      background:linear-gradient(180deg, var(--pos-fill-top), var(--pos-fill-bot));
+      border:1px solid rgba(47,203,141,.10);
+    }
+
+    .day--neg{
+      background:linear-gradient(180deg, var(--neg-fill-top), var(--neg-fill-bot));
+      border:1px solid rgba(244,95,122,.10);
+    }
+
+    .day--zero{
+      background:linear-gradient(180deg, var(--zero-fill-top), var(--zero-fill-bot));
+      border:1px solid rgba(118,130,149,.10);
+    }
+
+    .day--pos .day__num,
+    .day--neg .day__num,
+    .day--zero .day__num{
+      position:absolute;
+      top:10px;
+      left:50%;
+      transform:translateX(-45%);
+      width:auto;
+      text-align:center;
+    }
+
+    .day--pos .day__val,
+    .day--neg .day__val,
+    .day--zero .day__val{
+      align-self:center;
+      padding-top:18px;
+    }
+
+    .day--empty{
+      min-height:52px;
+      aspect-ratio:1/1;
+      border-radius:6px;
+      background:transparent;
+    }
+
+    .app-footer{ padding:18px var(--pad-x) 0; }
+
+    .home-indicator{
+      width:140px;
+      height:5px;
+      margin:0 auto;
+      background:rgba(240,242,246,.88);
+      border-radius:999px;
+      opacity:.85;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="statusbar" aria-hidden="true">
+        <div>23:18</div>
+        <div class="statusbar__right">
+          <span class="statusbar__signal"><span></span><span></span><span></span><span></span></span>
+          <span>4G</span>
+          <span class="statusbar__battery-pill">90</span>
+        </div>
+      </div>
+
+      <div class="appbar">
+        <button class="icon-btn" type="button" aria-label="Back">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <h1 class="appbar__title">
+          <button class="title-btn" type="button">
+            <span>Futures PNL</span>
+            <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </h1>
+
+        <button class="icon-btn" type="button" aria-label="Share">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="6" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/>
+            <circle cx="16.5" cy="6" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/>
+            <circle cx="16.5" cy="18" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/>
+            <path d="M8 11l6.2-3.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 13l6.2 3.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <nav class="segment-tabs" aria-label="Futures contract type">
+        <a class="segment-tab is-active" href="javascript:void(0)">USDⓈ-M</a>
+        <a class="segment-tab" href="javascript:void(0)">COIN-M</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="pnl-summary">
+        <div class="pnl-summary__header">
+          <h2 class="section-label">Today's PNL</h2>
+          <button class="icon-btn icon-btn--ghost" type="button" aria-label="Toggle visibility">
+            <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z" fill="none" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="12" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="pnl-big">
+          <span id="todayPct" class="pnl-big__pct pnl--pos">+0.00%</span>
+          <span id="todayAmt" class="pnl-big__amt pnl--pos">+0.00 <span class="unit">USD</span></span>
+        </div>
+
+        <dl class="metric-grid">
+          <div class="metric">
+            <dt class="metric__label">7D PNL</dt>
+            <dd id="p7Pct" class="metric__main pnl--pos">+0.00%</dd>
+            <dd id="p7Amt" class="metric__sub pnl--pos">+0.00 <span class="unit">USD</span></dd>
+          </div>
+
+          <div class="metric">
+            <dt class="metric__label">30D PNL</dt>
+            <dd id="p30Pct" class="metric__main pnl--pos">+0.00%</dd>
+            <dd id="p30Amt" class="metric__sub pnl--pos">+0.00 <span class="unit">USD</span></dd>
+          </div>
+
+          <div class="metric">
+            <dt class="metric__label">Lifetime PNL</dt>
+            <dd id="lifeAmt" class="metric__main pnl--pos">0</dd>
+            <dd class="metric__sub pnl--pos"><span class="unit">USD</span></dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="totals-panel">
+        <div class="range-picker">
+          <button class="range-pill">7D</button>
+          <button class="range-pill">1M</button>
+          <button class="range-pill">3M</button>
+          <button class="range-pill is-active">1Y</button>
+          <button class="range-pill">Customize</button>
+        </div>
+
+        <dl class="totals">
+          <div class="totals__row">
+            <dt>Total profit</dt>
+            <dd id="totalProfit">0.00 <span class="unit">USD</span></dd>
+          </div>
+          <div class="totals__row">
+            <dt>Total loss</dt>
+            <dd id="totalLoss">0.00 <span class="unit">USD</span></dd>
+          </div>
+          <div class="totals__row">
+            <dt>Net profit/ loss</dt>
+            <dd id="netProfit" class="pnl--pos">0.00 <span class="unit">USD</span></dd>
+          </div>
+        </dl>
+      </section>
+
+      <nav class="subtabs">
+        <a class="subtab is-active" href="javascript:void(0)">Overview</a>
+        <a class="subtab" href="javascript:void(0)">Detail</a>
+        <a class="subtab" href="javascript:void(0)">Symbol Analysis</a>
+        <a class="subtab" href="javascript:void(0)">Funding &amp; Transaction</a>
+      </nav>
+
+      <section class="daily">
+        <header class="daily__header">
+          <h2 class="daily__title">Daily PNL</h2>
+
+          <div class="daily__actions">
+            <img
+              class="daily__action-image"
+              src="https://iili.io/qoEUaXp.jpg"
+              alt="Custom action image"
+            />
+          </div>
+        </header>
+
+        <div class="month-nav">
+          <button id="prevMonth" class="month-nav__btn" type="button" aria-label="Previous month">
+            <span class="triangle triangle--left" aria-hidden="true"></span>
+          </button>
+
+          <p id="monthLabel" class="month-nav__label">----</p>
+
+          <button id="nextMonth" class="month-nav__btn" type="button" aria-label="Next month">
+            <span class="triangle triangle--right" aria-hidden="true"></span>
+          </button>
+        </div>
+
+        <div class="calendar">
+          <div class="dow" aria-hidden="true">
+            <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+          </div>
+          <div id="calGrid" class="calendar-grid" role="grid" aria-label="Daily PNL calendar"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <div class="home-indicator" aria-hidden="true"></div>
+    </footer>
+  </div>
+
+  <script>
+    function mulberry32(a){
+      return function(){
+        let t = a += 0x6D2B79F5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      }
+    }
+
+    function randBetween(rng, min, max){
+      return min + (max - min) * rng();
+    }
+
+    function fmtMoney(n){
+      const sign = n >= 0 ? "+" : "-";
+      const abs = Math.abs(n);
+      return `${sign}${abs.toFixed(2)}`;
+    }
+
+    function fmtPct(n){
+      const sign = n >= 0 ? "+" : "-";
+      return `${sign}${Math.abs(n).toFixed(2)}%`;
+    }
+
+    function clamp(n, a, b){
+      return Math.max(a, Math.min(b, n));
+    }
+
+    function yyyymm(y, m){
+      return `${y}-${String(m).padStart(2,"0")}`;
+    }
+
+    (function initTopNumbers(){
+      const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0;
+      const rng = mulberry32(seed);
+
+      const lifetimeNet = Math.round(randBetween(rng, 45000, 65000));
+      const totalProfit = Math.round(lifetimeNet / 0.80);
+      const totalLoss = Math.round(totalProfit * 0.20);
+
+      const todayAmt = Math.round(randBetween(rng, 200, 1000));
+      const p7Amt  = Math.round(clamp(lifetimeNet * randBetween(rng, 0.01, 0.06), 600, 6000));
+      const p30Amt = Math.round(clamp(lifetimeNet * randBetween(rng, 0.03, 0.15), 1500, 15000));
+
+      const todayPct = randBetween(rng, 0.20, 3.90);
+      const p7Pct    = randBetween(rng, 1.00, 9.50);
+      const p30Pct   = randBetween(rng, 2.50, 35.00);
+
+      document.getElementById("todayPct").textContent = fmtPct(todayPct);
+      document.getElementById("todayAmt").innerHTML = `${fmtMoney(todayAmt)} <span class="unit">USD</span>`;
+
+      document.getElementById("p7Pct").textContent = fmtPct(p7Pct);
+      document.getElementById("p7Amt").innerHTML = `${fmtMoney(p7Amt)} <span class="unit">USD</span>`;
+
+      document.getElementById("p30Pct").textContent = fmtPct(p30Pct);
+      document.getElementById("p30Amt").innerHTML = `${fmtMoney(p30Amt)} <span class="unit">USD</span>`;
+
+      document.getElementById("lifeAmt").textContent = `+${lifetimeNet.toLocaleString("en-US")}`;
+
+      document.getElementById("totalProfit").innerHTML =
+        `${totalProfit.toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2})} <span class="unit">USD</span>`;
+
+      document.getElementById("totalLoss").innerHTML =
+        `${totalLoss.toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2})} <span class="unit">USD</span>`;
+
+      document.getElementById("netProfit").innerHTML =
+        `+${lifetimeNet.toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2})} <span class="unit">USD</span>`;
+    })();
+
+    const HISTORY_MONTHS = 12;
+    const START_YEAR = 2026;
+    const START_MONTH = 3;
+
+    const months = [];
+    for(let i = HISTORY_MONTHS - 1; i >= 0; i--){
+      const d = new Date(Date.UTC(START_YEAR, START_MONTH - 1, 1));
+      d.setUTCMonth(d.getUTCMonth() - i);
+      months.push({ y: d.getUTCFullYear(), m: d.getUTCMonth() + 1 });
+    }
+
+    let monthIndex = months.length - 1;
+    const calGrid = document.getElementById("calGrid");
+    const monthLabel = document.getElementById("monthLabel");
+    const prevBtn = document.getElementById("prevMonth");
+    const nextBtn = document.getElementById("nextMonth");
+
+    function daysInMonthUTC(y, m){
+      return new Date(Date.UTC(y, m, 0)).getUTCDate();
+    }
+
+    function firstDowUTC(y, m){
+      return new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
+    }
+
+    function buildMonthData(y, m){
+      const seed = ((Date.now() + y * 100 + m) ^ Math.floor(Math.random() * 1e9)) >>> 0;
+      const rng = mulberry32(seed);
+
+      const dim = daysInMonthUTC(y, m);
+      const profitCount = (rng() < 0.5) ? 27 : 28;
+      const lossCount = dim - profitCount;
+
+      const allDays = Array.from({length: dim}, (_, i) => i + 1);
+      for(let i = allDays.length - 1; i > 0; i--){
+        const j = Math.floor(rng() * (i + 1));
+        [allDays[i], allDays[j]] = [allDays[j], allDays[i]];
+      }
+
+      const lossDays = new Set(allDays.slice(0, lossCount));
+      const map = {};
+
+      for(let d = 1; d <= dim; d++){
+        if(lossDays.has(d)){
+          map[d] = -randBetween(rng, 10, 50);
+        }else{
+          map[d] = randBetween(rng, 200, 1000);
+        }
+      }
+      return map;
+    }
+
+    function renderCalendar(){
+      const {y, m} = months[monthIndex];
+      monthLabel.textContent = yyyymm(y, m);
+
+      prevBtn.disabled = (monthIndex === 0);
+      nextBtn.disabled = (monthIndex === months.length - 1);
+
+      const dim = daysInMonthUTC(y, m);
+      const firstDow = firstDowUTC(y, m);
+      const data = buildMonthData(y, m);
+
+      calGrid.innerHTML = "";
+
+      for(let i = 0; i < firstDow; i++){
+        const empty = document.createElement("div");
+        empty.className = "day day--empty";
+        empty.setAttribute("aria-hidden", "true");
+        calGrid.appendChild(empty);
+      }
+
+      for(let d = 1; d <= dim; d++){
+        const v = data[d];
+        const btn = document.createElement("button");
+        btn.type = "button";
+
+        let dayClass = "day ";
+        let valClass = "day__val ";
+
+        if(v > 0){
+          dayClass += "day--pos";
+          valClass += "pnl--pos";
+        }else if(v < 0){
+          dayClass += "day--neg";
+          valClass += "pnl--neg";
+        }else{
+          dayClass += "day--zero";
+          valClass += "pnl--neutral";
+        }
+
+        btn.className = dayClass;
+        btn.setAttribute("role", "gridcell");
+
+        const num = document.createElement("span");
+        num.className = "day__num";
+        num.textContent = String(d);
+
+        const val = document.createElement("span");
+        val.className = valClass;
+        val.textContent = (v > 0 ? "+" : v < 0 ? "-" : "") + Math.abs(v).toFixed(2);
+
+        btn.appendChild(num);
+        btn.appendChild(val);
+
+        const label = `${d} ${yyyymm(y, m)}, ${v >= 0 ? "profit" : "loss"} ${Math.abs(v).toFixed(2)} USD`;
+        btn.setAttribute("aria-label", label);
+        btn.title = label;
+
+        calGrid.appendChild(btn);
+      }
+
+      const totalCells = firstDow + dim;
+      const remainder = totalCells % 7;
+      if(remainder !== 0){
+        const add = 7 - remainder;
+        for(let i = 0; i < add; i++){
+          const empty = document.createElement("div");
+          empty.className = "day day--empty";
+          empty.setAttribute("aria-hidden", "true");
+          calGrid.appendChild(empty);
+        }
+      }
+    }
+
+    prevBtn.addEventListener("click", () => {
+      if(monthIndex > 0){
+        monthIndex--;
+        renderCalendar();
+      }
+    });
+
+    nextBtn.addEventListener("click", () => {
+      if(monthIndex < months.length - 1){
+        monthIndex++;
+        renderCalendar();
+      }
+    });
+
+    renderCalendar();
+  </script>
+</body>
+</html>
